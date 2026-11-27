@@ -61,6 +61,26 @@ const W = {
   async search(q) { return ok(await sb.rpc("search_wishes", { q }).select(W.WISH_SELECT)); },
   async setBackground(id, bg) { ok(await sb.from("wishes").update({ background: bg }).eq("id", id)); },
 
+  /* ---------- CHAT ---------- */
+  async messages(wishId) { return ok(await sb.from("messages").select("*").eq("wish_id", wishId).order("created_at")); },
+  async sendMsg(wishId, body, media) { const u = await W.user(); ok(await sb.from("messages").insert({ wish_id: wishId, sender_id: u.id, body, media })); },
+  async editMsg(id, body, media) { ok(await sb.from("messages").update({ body, media, edited_at: new Date().toISOString() }).eq("id", id)); },
+  async delMsg(id) { ok(await sb.from("messages").delete().eq("id", id)); },
+  async markRead(wishId) { await sb.rpc("mark_read", { p_wish: wishId }); },
+  async unread() { const u = await W.user(); return ok(await sb.from("messages").select("wish_id").is("read_at", null).neq("sender_id", u.id)); },
+  subscribe(wishId, onMsg, onTyping) {
+    return sb.channel("chat-" + wishId)
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: "wish_id=eq." + wishId }, () => onMsg())
+      .on("broadcast", { event: "typing" }, ({ payload }) => onTyping(payload.uid))
+      .subscribe();
+  },
+  typing(ch, uid) { ch.send({ type: "broadcast", event: "typing", payload: { uid } }); },
+  unsub(ch) { sb.removeChannel(ch); },
+  async myGranter() { const u = await W.user(); return ok(await sb.from("granters").select("*").eq("user_id", u.id).maybeSingle()); },
+  async granterInfo(id) { return ok(await sb.from("granters").select("*").eq("user_id", id).maybeSingle()); },
+  async profileInfo(id) { return ok(await sb.from("profiles").select("*").eq("id", id).maybeSingle()); },
+  async report(wishId) { const u = await W.user(); ok(await sb.from("reports").insert({ wish_id: wishId, reporter_id: u.id })); },
+
   /* ---------- LIKES / SAVES / COMMENTS ---------- */
   async likesFor(ids) { return ok(await sb.from("likes").select("wish_id,user_id").in("wish_id", ids)); },
   async toggleLike(wishId, liked) {
