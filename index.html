@@ -457,16 +457,17 @@ If you help me get there, you will have changed my whole life.</div>
 <div class="s" id="s8">
   <div class="ch-top">
     <span class="back" style="margin:0;font-size:1.6rem" onclick="backFromChat()">←</span>
-    <button type="button" class="ch-flag" aria-pressed="false" onclick="reportChat(this)">
+    <button type="button" id="ch-flag" class="ch-flag" aria-pressed="false" onclick="reportChat(this)">
       <svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
       <span>Report scam or fraud</span>
     </button>
     <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
-      <div class="ch-avatar"><div class="shimmer"></div></div>
-      <button class="ch-more"><div class="shimmer"></div>MORE</button>
+      <div class="ch-avatar" id="ch-av"><div class="shimmer"></div></div>
+      <button class="ch-more" onclick="chatMore()"><div class="shimmer"></div>MORE</button>
     </div>
   </div>
   <div class="ch-list" id="ch-list"></div>
+  <div id="ch-typing" style="color:#0000a0;font-size:.75rem;font-weight:600;padding:0 6px 4px;min-height:1.1em"></div>
   <div class="ch-pv" id="ch-pv"></div>
   <div class="ch-input">
     <span class="ch-plus" onclick="$('file-chat').click()">+</span>
@@ -528,7 +529,7 @@ const urlCache=new WeakMap();
 const blobUrl=f=>{if(f.url)return f.url;let u=urlCache.get(f);if(!u){u=URL.createObjectURL(f);urlCache.set(f,u)}return u};
 const pauseAll=except=>{document.querySelectorAll('video,audio').forEach(v=>{if(v!==except&&!v.paused){try{v.pause()}catch{}}})};
 const playSafe=el=>{if(!el)return;try{let p=el.play();if(p&&p.catch)p.catch(()=>{})}catch{}};
-const go=n=>{let target=$('s'+n);if(!target)return;S().forEach(s=>s.classList.toggle('on',s===target));if(n!=6){bu.forEach(rv);bu=[]}if(n==5){drawSv();let tp=$('tp');if(tp)tp.scrollLeft=tabi*tp.clientWidth}scrollTo(0,0)};
+const go=n=>{let target=$('s'+n);if(!target)return;S().forEach(s=>s.classList.toggle('on',s===target));if(n!=6){bu.forEach(rv);bu=[]}if(n==5){drawSv();paintBadges();let tp=$('tp');if(tp)tp.scrollLeft=tabi*tp.clientWidth}scrollTo(0,0)};
 const st=(n,m)=>{if(!db)return null;return db.transaction(n,m).objectStore(n)};
 let wc={},db,acc,pic="",ed=0,pw,ew=0,ws=[],rx={},vo=0,cw,sup=1,ec=0,tabi=0,bgs=[],bu=[],icb,wcur=null,goToFeedAfterLoad=false,cmMediaList=[],chMediaList=[],searchTimeout;
 
@@ -629,7 +630,7 @@ fd.onclick=e=>{
   if(k=='lk'){let was=r.lk.some(meL);r.lk=was?r.lk.filter(x=>!meL(x)):[...r.lk,acc.uid];upd(p);W.toggleLike(p.w.id,was).catch(()=>toast('Could not save like'))}
   else if(k=='cm'){cw=p;r.cm.some(meC)?openCm():$('sp').classList.add('sh')}
   else if(k=='sv')tgS(p.w.id);
-  else if(k=='call'){toast('Chat and the $2 lock arrive in the next update')}
+  else if(k=='call'){callWish(p.w)}
   else if(k=='mr'){let o=p.w.owner||acc;$('m-name').textContent=o.name;$('m-age').textContent=o.age;$('m-gen').textContent=o.gender;$('m-cty').textContent=o.country;$('ms').classList.add('sh')}
   else if(!p.classList.contains('nm'))a.classList.toggle('op')
 };
@@ -664,7 +665,7 @@ const edCm=()=>{
   grow();drawCm();if(ec)$('ci').focus();
 };
 const delCm=()=>ask("Delete your comment?",0,async()=>{let r=rx[cw.w.id];if(!r)return;let m=r.cm.find(meC);if(!m)return;try{await W.deleteComment(m.id)}catch(e){return alert(e.message)}r.cm=r.cm.filter(c=>!meC(c));cmx()});
-const send=async()=>{let v=$('ci').value.trim();if(!v&&!cmMediaList.length)return;let r=rx[cw.w.id];if(!r)return;let m=r.cm.find(meC);try{let media=[];for(const x of cmMediaList)media.push(x.url.startsWith('data:')?await W.upload(await (await fetch(x.url)).blob(),acc.uid):x);if(m){if(!ec)return;await W.editComment(m.id,{body:v,media})}else await W.addComment(cw.w.id,{supports:!!sup,body:v,media});r.cm=(await W.comments(cw.w.id)).map(adaptC)}catch(e){return alert(e.message)}ec=0;cmMediaList=[];$('cpv').innerHTML='';$('cpv').classList.remove('sh');$('ci').value='';$('ci').placeholder='Comment';grow();drawCm()};
+let sending=0;const send=async()=>{if(sending)return;sending=1;try{await send0()}finally{sending=0}};const send0=async()=>{let v=$('ci').value.trim();if(!v&&!cmMediaList.length)return;let r=rx[cw.w.id];if(!r)return;let m=r.cm.find(meC);try{let media=[];for(const x of cmMediaList)media.push(x.url.startsWith('data:')?await W.upload(await (await fetch(x.url)).blob(),acc.uid):x);if(m){if(!ec)return;await W.editComment(m.id,{body:v,media})}else await W.addComment(cw.w.id,{supports:!!sup,body:v,media});r.cm=(await W.comments(cw.w.id)).map(adaptC)}catch(e){return alert(e.message)}ec=0;cmMediaList=[];$('cpv').innerHTML='';$('cpv').classList.remove('sh');$('ci').value='';$('ci').placeholder='Comment';grow();drawCm()};
 $('file-cm').onchange=e=>{
   let files=photoVideoFiles(e.target.files); e.target.value='';
   if(!files.length) return;
@@ -702,7 +703,7 @@ function backFromChat() {
     }, 50);
   }
 }
-const reportChat = button => { button.setAttribute('aria-pressed', String(button.getAttribute('aria-pressed') !== 'true')); };
+const reportChat=async b=>{if(!curChat||curChat.role!=='wisher')return;try{await W.report(curChat.w.id);b.setAttribute('aria-pressed','true');toast('Report sent')}catch(e){toast(/duplicate/.test(e.message)?'You already reported this':'You can report only after you both have chatted')}};
 
 function drawChatMsgs(){
   if(!curChatWish) return;
@@ -727,55 +728,11 @@ function drawChatMsgs(){
 
 let editingChatIdx = -1;
 
-const sendChat = () => {
-  let v = $('ch-txt').value.trim();
-  if(!v && !chMediaList.length) return;
-  if(!curChatWish) return;
-  let r = rx[curChatWish.id] || {id: curChatWish.id, lk:[], cm:[], chatMsgs:[]};
-  if(!r.chatMsgs) r.chatMsgs = [];
-  
-  if(editingChatIdx >= 0) {
-    r.chatMsgs[editingChatIdx].text = v;
-    r.chatMsgs[editingChatIdx].media = [...chMediaList];
-    r.chatMsgs[editingChatIdx].edited = true;
-    editingChatIdx = -1;
-  } else {
-    r.chatMsgs.push({ text: v, media: [...chMediaList], ts: Date.now() });
-  }
-  
-  saveR(r);
-  $('ch-txt').value = '';
-  chMediaList = [];
-  $('ch-pv').innerHTML = ''; $('ch-pv').classList.remove('sh');
-  drawChatMsgs();
-};
+const sendChat=async()=>{if(!curChat||chSending)return;let v=$('ch-txt').value.trim();if(!v&&!chMediaList.length)return;chSending=1;try{let media=[];for(const x of chMediaList)media.push(x.url.startsWith('data:')?await W.upload(await (await fetch(x.url)).blob(),acc.uid):x);if(curChat.edit>=0){await W.editMsg(curChat.msgs[curChat.edit].id,v,media);curChat.edit=-1}else await W.sendMsg(curChat.w.id,v,media);$('ch-txt').value='';chMediaList=[];pvChat();curChat.msgs=await W.messages(curChat.w.id);drawChat()}catch(e){alert(e.message)}chSending=0};
 
-const editChatMsg = (idx) => {
-  let r = rx[curChatWish.id];
-  if(!r || !r.chatMsgs[idx]) return;
-  editingChatIdx = idx;
-  $('ch-txt').value = r.chatMsgs[idx].text || '';
-  chMediaList = [...(r.chatMsgs[idx].media || [])];
-  
-  let pv = $('ch-pv');
-  pv.innerHTML = chMediaList.map((m, mi) => m.type==='video' ? `<div class="pv"><video src="${m.url}" muted style="width:100%;height:100%;object-fit:cover"></video><button onclick="rmChatMedia(${mi})">x</button></div>` : `<div class="pv"><img src="${m.url}" style="width:100%;height:100%;object-fit:cover"><button onclick="rmChatMedia(${mi})">x</button></div>`).join('');
-  if(chMediaList.length) pv.classList.add('sh'); else pv.classList.remove('sh');
-  $('ch-txt').focus();
-};
+const editChatMsg=idx=>{let m=curChat&&curChat.msgs[idx];if(!m||m.sender_id!==acc.uid)return;curChat.edit=idx;$('ch-txt').value=m.body||'';chMediaList=[...(m.media||[])];pvChat();$('ch-txt').focus()};
 
-const delChatMsg = (idx) => {
-  let r = rx[curChatWish.id];
-  if(!r || !r.chatMsgs[idx]) return;
-  r.chatMsgs.splice(idx, 1);
-  if(editingChatIdx === idx) {
-    editingChatIdx = -1;
-    $('ch-txt').value = '';
-    chMediaList = [];
-    $('ch-pv').innerHTML = ''; $('ch-pv').classList.remove('sh');
-  }
-  saveR(r);
-  drawChatMsgs();
-};
+const delChatMsg=async idx=>{let m=curChat&&curChat.msgs[idx];if(!m||m.sender_id!==acc.uid)return;try{await W.delMsg(m.id);curChat.msgs.splice(idx,1);drawChat()}catch(e){alert(e.message)}};
 
 $('file-chat').onchange = e => {
   let files = photoVideoFiles(e.target.files); e.target.value = '';
@@ -955,13 +912,38 @@ let ig=0;addEventListener('pointerdown',e=>{let a=document.activeElement,b=e.tar
 
 /* === SUPABASE CONNECTION === */
 const ap=p=>p&&{uid:p.id,name:p.name,country:p.country,age:p.age,gender:p.gender,pic:p.pic_url};
-const adapt=w=>{let o=w.owner||{};let x={id:w.id,title:w.title,text:w.body,ts:Date.parse(w.created_at),files:(w.media||[]).map(m=>({url:m.url,type:m.type})),owner:{uid:o.id,name:o.name,country:o.country,age:o.age,gender:o.gender,pic:o.pic_url,online:W.isOnline(o)}};wc[w.id]=x;rx[w.id]=rx[w.id]||{id:w.id,lk:[],cm:[]};rx[w.id].bg=w.background==='blue'?'bg-blue':null;return x};
+const adapt=w=>{let o=w.owner||{};let x={id:w.id,granter_id:w.granter_id,title:w.title,text:w.body,ts:Date.parse(w.created_at),files:(w.media||[]).map(m=>({url:m.url,type:m.type})),owner:{uid:o.id,name:o.name,country:o.country,age:o.age,gender:o.gender,pic:o.pic_url,online:W.isOnline(o)}};wc[w.id]=x;rx[w.id]=rx[w.id]||{id:w.id,lk:[],cm:[]};rx[w.id].bg=w.background==='blue'?'bg-blue':null;return x};
 const adaptC=c=>({id:c.id,u:c.user_id,n:c.author&&c.author.name,p:c.author&&c.author.pic_url,s:c.supports,t:c.body,media:c.media||[],ts:Date.parse(c.created_at)});
 async function hydrate(list){let ids=list.map(w=>w.id);if(!ids.length)return;let [L,C]=await Promise.all([W.likesFor(ids),W.commentsFor(ids)]);ids.forEach(id=>{let r=rx[id];r.lk=L.filter(l=>l.wish_id==id).map(l=>l.user_id);r.cm=C.filter(c=>c.wish_id==id).map(adaptC)})}
-async function loadMine(){ws=(await W.myWishes()).map(adapt);try{await hydrate(ws)}catch(e){}draw()}
+async function loadMine(){ws=(await W.myWishes()).map(adapt);try{await hydrate(ws)}catch(e){}draw();paintBadges()}
 async function loadSaves(){let r=await W.mySaves();sv().ids=r.map(x=>x.wish_id);r.forEach(x=>x.wish&&adapt(x.wish))}
 async function boot(){try{let u=await W.user();if(u){let p=await W.myProfile();if(p){acc=ap(p);render();await loadMine();try{await loadSaves()}catch(e){}drawSv();await openFeed();return}}}catch(e){console.error(e)}go(1)}
 async function doLogin(){try{await W.signIn($('li-em').value.trim(),$('li-pw').value);await boot()}catch(e){alert(e.message)}}
+/* === CHAT (wisher + granter) === */
+let curChat=null,chSending=0,lastT=0,typT;
+function esc(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function pvChat(){let pv=$('ch-pv');pv.innerHTML=chMediaList.map((m,i)=>`<div class="pv">${m.type==='video'?`<video src="${m.url}" muted style="width:100%;height:100%;object-fit:cover"></video>`:`<img src="${m.url}" style="width:100%;height:100%;object-fit:cover">`}<button onclick="rmChatMedia(${i})">x</button></div>`).join('');pv.classList.toggle('sh',chMediaList.length>0)}
+async function paintBadges(){try{let a=await W.unread(),c={};a.forEach(x=>c[x.wish_id]=(c[x.wish_id]||0)+1);document.querySelectorAll('#wl .wr').forEach(r=>{let n=c[r.dataset.id]||0,b=r.querySelector('.w-badge');if(b)b.textContent=n+(n==1?' message':' messages')})}catch(e){}}
+async function callWish(w){try{
+  if(w.owner&&w.owner.uid===acc.uid){if(!w.granter_id)return toast('No granter yet. When a granter locks your wish, your chat opens here.');return openChat(w,'wisher')}
+  let g=await W.myGranter();
+  if(g&&g.frozen)return toast('Your account has been frozen due to frequent reports of scam and fraud. ⚠️');
+  if(w.granter_id){if(w.granter_id===acc.uid)return openChat(w,'granter');return toast('Sorry, this wish has a Granter. Please check another wish.')}
+  toast('The granter account and the $2 lock arrive in the next update')
+}catch(e){alert(e.message)}}
+async function openChat(w,role){try{
+  let oid=role==='wisher'?w.granter_id:w.owner.uid,o=(role==='wisher'?await W.granterInfo(oid):await W.profileInfo(oid))||{};
+  curChat={w,role,other:o,msgs:await W.messages(w.id),edit:-1};
+  av($('ch-av'),{pic:o.pic_url,name:o.name});let im=$('ch-av').querySelector('img');if(im)im.style.cssText='width:100%;height:100%;object-fit:cover';
+  $('ch-flag').style.visibility=role==='wisher'?'visible':'hidden';$('ch-flag').setAttribute('aria-pressed','false');$('ch-typing').textContent='';
+  $('ch-txt').placeholder=role==='wisher'?'Chat with granter . . .':'Chat with wisher . . .';chMediaList=[];pvChat();
+  go(8);drawChat();W.markRead(w.id);
+  curChat.ch=W.subscribe(w.id,async()=>{if(!curChat)return;curChat.msgs=await W.messages(w.id);drawChat();W.markRead(w.id)},uid=>{if(uid===acc.uid)return;$('ch-typing').textContent='Typing . . .';clearTimeout(typT);typT=setTimeout(()=>$('ch-typing').textContent='',3000)})
+}catch(e){alert(e.message)}}
+function chatMore(){let o=curChat&&curChat.other;if(!o)return;$('m-name').textContent=o.name||'';$('m-age').textContent=o.age||'';$('m-gen').textContent=o.gender||'';$('m-cty').textContent=o.country||'';$('ms').classList.add('sh')}
+function backFromChat(){if(curChat&&curChat.ch)W.unsub(curChat.ch);curChat=null;go(6);if(wcur)setTimeout(()=>{let el=[...fd.children].find(x=>x.w&&x.w.id==wcur.id);if(el)fd.scrollTop=el.offsetTop},50)}
+function drawChat(){if(!curChat)return;let f=document.createDocumentFragment();curChat.msgs.forEach((m,i)=>{let mine=m.sender_id===acc.uid,d=document.createElement('div');d.className='ch-msg '+(mine?'me':'granter');d.innerHTML=(m.body?'<div class="ch-bubble">'+esc(m.body)+'</div>':'')+((m.media||[]).length?'<div class="ch-media">'+m.media.map((x,j)=>'<div class="mm '+(x.type==='video'?'v':'')+'" data-j="'+j+'">'+(x.type==='video'?'<video src="'+esc(x.url)+'" preload="metadata"></video>':'<img src="'+esc(x.url)+'">')+'</div>').join('')+'</div>':'')+'<div class="ch-meta"><span class="ch-time">sent '+dt(Date.parse(m.created_at))+(m.edited_at?' (edited)':'')+(mine&&m.read_at?' · seen':'')+'</span>'+(mine?'<b onclick="editChatMsg('+i+')">edit</b><b class="d" onclick="delChatMsg('+i+')">del</b>':'')+'</div>';d.querySelectorAll('.mm').forEach(el=>el.onclick=()=>openMedia(m.media,+el.dataset.j));f.append(d)});$('ch-list').replaceChildren(f);$('ch-list').scrollTop=$('ch-list').scrollHeight}
+$('ch-txt').addEventListener('input',()=>{let n=Date.now();if(curChat&&curChat.ch&&n-lastT>1500){lastT=n;try{W.typing(curChat.ch,acc.uid)}catch(e){}}});
 boot();
 </script>
 </body>
