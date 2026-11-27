@@ -46,7 +46,7 @@ textarea{flex:1;border:none;outline:none;resize:none;font:inherit;color:#333}
 .pin:last-child{border-right:none}
 .pin img,.pin video{width:100%;height:100%;object-fit:cover}
 .text{border:2px solid #000;padding:10px;font-size:.85rem;color:#333;text-align:center;line-height:1.5;white-space:pre-wrap}
-#s3,#s4{height:100vh;justify-content:center;align-items:center;padding:20px}
+#s3,#s4{height:100vh;height:100dvh;justify-content:center;align-items:center;padding:20px}#s4{justify-content:flex-start}
 #s3 .card{position:relative;border:2px solid #0000a0;width:100%;max-width:380px;padding:50px 20px;display:flex;flex-direction:column;align-items:center;background:#fff;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,160,0.08)}
 #s3 .back{position:absolute;top:15px;left:20px;margin:0}
 #s3 h2{color:#0000a0;font-size:1.1rem;text-transform:uppercase;text-align:center;margin-bottom:40px;letter-spacing:1.5px;font-weight:700}
@@ -75,7 +75,7 @@ textarea{flex:1;border:none;outline:none;resize:none;font:inherit;color:#333}
 .terms input{width:16px;height:16px;accent-color:#0000a0;cursor:pointer}
 .terms b{color:#0000a0;cursor:pointer;text-decoration:underline}
 
-#s5{height:100vh;padding:14px;justify-content:center}
+#s5{height:100vh;height:100dvh;padding:14px;justify-content:center}
 .frame{width:100%;max-width:480px;height:100%;border:1.5px dashed #0000a0;border-radius:6px;display:flex;flex-direction:column;align-items:center;padding:8vh 22px 22px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .av{position:relative;width:130px;height:130px;flex-shrink:0}
 .ring{width:100%;height:100%;border:2px dotted #0000a0;border-radius:50%;overflow:hidden;display:flex;justify-content:center;align-items:center;background:#fff}
@@ -305,7 +305,7 @@ textarea{flex:1;border:none;outline:none;resize:none;font:inherit;color:#333}
 .ch-pv.sh{display:flex}
 
 /* SEARCH SCREEN (#s9) */
-#s9{height:100vh;flex-direction:column;padding:14px}
+#s9{height:100vh;height:100dvh;flex-direction:column;padding:14px}
 .se-top{display:flex;gap:10px;align-items:center;margin-bottom:25px}
 .se-bar{flex:1;border:1.5px solid #000;padding:14px 16px;font-size:1rem;color:#0000a0;outline:none;background:#fff;letter-spacing:1px;border-radius:2px;box-shadow:0 2px 4px rgba(0,0,0,0.05)}
 .se-bar::placeholder{color:#0000a0;opacity:0.8;font-weight:500;letter-spacing:2px}
@@ -426,7 +426,7 @@ If you help me get there, you will have changed my whole life.</div>
     <input type="text" class="se-bar" id="se-in" placeholder="Search for wishes . . .">
   </div>
   
-  <div id="se-default-area">
+  <div id="se-default-area" style="flex:1;overflow-y:auto">
     <div class="se-title">COMPETITION</div>
     <div class="se-comp-box">
       <div class="se-comp-left">
@@ -529,7 +529,7 @@ const urlCache=new WeakMap();
 const blobUrl=f=>{if(f.url)return f.url;let u=urlCache.get(f);if(!u){u=URL.createObjectURL(f);urlCache.set(f,u)}return u};
 const pauseAll=except=>{document.querySelectorAll('video,audio').forEach(v=>{if(v!==except&&!v.paused){try{v.pause()}catch{}}})};
 const playSafe=el=>{if(!el)return;try{let p=el.play();if(p&&p.catch)p.catch(()=>{})}catch{}};
-const go=n=>{let target=$('s'+n);if(!target)return;S().forEach(s=>s.classList.toggle('on',s===target));if(n!=6){bu.forEach(rv);bu=[]}if(n==5){drawSv();paintBadges();let tp=$('tp');if(tp)tp.scrollLeft=tabi*tp.clientWidth}scrollTo(0,0)};
+const go=n=>{let target=$('s'+n);if(!target)return;S().forEach(s=>s.classList.toggle('on',s===target));if(n!=6){bu.forEach(rv);bu=[]}if(n==9)renderRank();if(n==5){drawSv();paintBadges();let tp=$('tp');if(tp)tp.scrollLeft=tabi*tp.clientWidth}scrollTo(0,0)};
 const st=(n,m)=>{if(!db)return null;return db.transaction(n,m).objectStore(n)};
 let wc={},db,acc,pic="",ed=0,pw,ew=0,ws=[],rx={},vo=0,cw,sup=1,ec=0,tabi=0,bgs=[],bu=[],icb,wcur=null,goToFeedAfterLoad=false,cmMediaList=[],chMediaList=[],searchTimeout;
 
@@ -829,12 +829,12 @@ async function renderSearch(q){if(!q)return;let results=[];try{results=(await W.
 
 // POSITION DOUBLE TAP LOGIC
 let lastTap = 0;
-$('se-in').addEventListener('touchend', function(e) {
+$('s9').addEventListener('touchend', function(e) {
   const currentTime = new Date().getTime();
   const tapLength = currentTime - lastTap;
   if (tapLength < 300 && tapLength > 0) {
     e.preventDefault(); 
-    $('pos-overlay').classList.add('sh');
+    showPos();
   }
   lastTap = currentTime;
 });
@@ -917,33 +917,44 @@ const adaptC=c=>({id:c.id,u:c.user_id,n:c.author&&c.author.name,p:c.author&&c.au
 async function hydrate(list){let ids=list.map(w=>w.id);if(!ids.length)return;let [L,C]=await Promise.all([W.likesFor(ids),W.commentsFor(ids)]);ids.forEach(id=>{let r=rx[id];r.lk=L.filter(l=>l.wish_id==id).map(l=>l.user_id);r.cm=C.filter(c=>c.wish_id==id).map(adaptC)})}
 async function loadMine(){ws=(await W.myWishes()).map(adapt);try{await hydrate(ws)}catch(e){}draw();paintBadges()}
 async function loadSaves(){let r=await W.mySaves();sv().ids=r.map(x=>x.wish_id);r.forEach(x=>x.wish&&adapt(x.wish))}
-async function boot(){try{let u=await W.user();if(u){let p=await W.myProfile();if(p){acc=ap(p);render();await loadMine();try{await loadSaves()}catch(e){}drawSv();await openFeed();return}}}catch(e){console.error(e)}go(1)}
+async function boot(){loadPins();try{let u=await W.user();if(u){let p=await W.myProfile();if(p){acc=ap(p);render();await loadMine();try{await loadSaves()}catch(e){}drawSv();await openFeed();return}}}catch(e){console.error(e)}go(1)}
 async function doLogin(){try{await W.signIn($('li-em').value.trim(),$('li-pw').value);await boot()}catch(e){alert(e.message)}}
 /* === CHAT (wisher + granter) === */
-let curChat=null,chSending=0,lastT=0,typT;
+let curChat=null,chSending=0,lastT=0,typT,chPoll=0;
 function esc(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function pvChat(){let pv=$('ch-pv');pv.innerHTML=chMediaList.map((m,i)=>`<div class="pv">${m.type==='video'?`<video src="${m.url}" muted style="width:100%;height:100%;object-fit:cover"></video>`:`<img src="${m.url}" style="width:100%;height:100%;object-fit:cover">`}<button onclick="rmChatMedia(${i})">x</button></div>`).join('');pv.classList.toggle('sh',chMediaList.length>0)}
 async function paintBadges(){try{let a=await W.unread(),c={};a.forEach(x=>c[x.wish_id]=(c[x.wish_id]||0)+1);document.querySelectorAll('#wl .wr').forEach(r=>{let n=c[r.dataset.id]||0,b=r.querySelector('.w-badge');if(b)b.textContent=n+(n==1?' message':' messages')})}catch(e){}}
 async function callWish(w){try{
-  if(w.owner&&w.owner.uid===acc.uid){if(!w.granter_id)return toast('No granter yet. When a granter locks your wish, your chat opens here.');return openChat(w,'wisher')}
+  if(w.owner&&w.owner.uid===acc.uid)return openChat(w,'wisher');
   let g=await W.myGranter();
   if(g&&g.frozen)return toast('Your account has been frozen due to frequent reports of scam and fraud. ⚠️');
   if(w.granter_id){if(w.granter_id===acc.uid)return openChat(w,'granter');return toast('Sorry, this wish has a Granter. Please check another wish.')}
   toast('The granter account and the $2 lock arrive in the next update')
 }catch(e){alert(e.message)}}
 async function openChat(w,role){try{
-  let oid=role==='wisher'?w.granter_id:w.owner.uid,o=(role==='wisher'?await W.granterInfo(oid):await W.profileInfo(oid))||{};
-  curChat={w,role,other:o,msgs:await W.messages(w.id),edit:-1};
-  av($('ch-av'),{pic:o.pic_url,name:o.name});let im=$('ch-av').querySelector('img');if(im)im.style.cssText='width:100%;height:100%;object-fit:cover';
-  $('ch-flag').style.visibility=role==='wisher'?'visible':'hidden';$('ch-flag').setAttribute('aria-pressed','false');$('ch-typing').textContent='';
-  $('ch-txt').placeholder=role==='wisher'?'Chat with granter . . .':'Chat with wisher . . .';chMediaList=[];pvChat();
-  go(8);drawChat();W.markRead(w.id);
+  if(chPoll){clearInterval(chPoll);chPoll=0}
+  let search=role==='wisher'&&!w.granter_id,oid=role==='wisher'?w.granter_id:w.owner.uid,o=search?{}:((role==='wisher'?await W.granterInfo(oid):await W.profileInfo(oid))||{});
+  curChat={w,role,other:o,msgs:search?[]:await W.messages(w.id),edit:-1};
+  $('ch-flag').style.visibility=role==='wisher'&&!search?'visible':'hidden';$('ch-flag').setAttribute('aria-pressed','false');$('ch-typing').textContent='';
+  document.querySelector('.ch-more').innerHTML=(search?'<div class="shimmer"></div>':'')+'MORE';
+  if(search)$('ch-av').innerHTML='<div class="shimmer"></div>';else{av($('ch-av'),{pic:o.pic_url,name:o.name});let im=$('ch-av').querySelector('img');if(im)im.style.cssText='width:100%;height:100%;object-fit:cover'}
+  $('ch-txt').disabled=search;$('ch-txt').placeholder=search?'Searching for a granter . . .':role==='wisher'?'Chat with granter . . .':'Chat with wisher . . .';chMediaList=[];pvChat();
+  go(8);drawChat();
+  if(search){$('ch-list').innerHTML='<div class="em">Searching for a granter . . .</div>';chPoll=setInterval(async()=>{try{let g=await W.wishGranter(w.id);if(g){clearInterval(chPoll);chPoll=0;w.granter_id=g;openChat(w,'wisher')}}catch(e){}},8000);return}
+  W.markRead(w.id);
   curChat.ch=W.subscribe(w.id,async()=>{if(!curChat)return;curChat.msgs=await W.messages(w.id);drawChat();W.markRead(w.id)},uid=>{if(uid===acc.uid)return;$('ch-typing').textContent='Typing . . .';clearTimeout(typT);typT=setTimeout(()=>$('ch-typing').textContent='',3000)})
 }catch(e){alert(e.message)}}
-function chatMore(){let o=curChat&&curChat.other;if(!o)return;$('m-name').textContent=o.name||'';$('m-age').textContent=o.age||'';$('m-gen').textContent=o.gender||'';$('m-cty').textContent=o.country||'';$('ms').classList.add('sh')}
-function backFromChat(){if(curChat&&curChat.ch)W.unsub(curChat.ch);curChat=null;go(6);if(wcur)setTimeout(()=>{let el=[...fd.children].find(x=>x.w&&x.w.id==wcur.id);if(el)fd.scrollTop=el.offsetTop},50)}
+function chatMore(){let o=curChat&&curChat.other;if(!o||!o.name)return;$('m-name').textContent=o.name||'';$('m-age').textContent=o.age||'';$('m-gen').textContent=o.gender||'';$('m-cty').textContent=o.country||'';$('ms').classList.add('sh')}
+function backFromChat(){if(chPoll){clearInterval(chPoll);chPoll=0}if(curChat&&curChat.ch)W.unsub(curChat.ch);curChat=null;go(6);if(wcur)setTimeout(()=>{let el=[...fd.children].find(x=>x.w&&x.w.id==wcur.id);if(el)fd.scrollTop=el.offsetTop},50)}
 function drawChat(){if(!curChat)return;let f=document.createDocumentFragment();curChat.msgs.forEach((m,i)=>{let mine=m.sender_id===acc.uid,d=document.createElement('div');d.className='ch-msg '+(mine?'me':'granter');d.innerHTML=(m.body?'<div class="ch-bubble">'+esc(m.body)+'</div>':'')+((m.media||[]).length?'<div class="ch-media">'+m.media.map((x,j)=>'<div class="mm '+(x.type==='video'?'v':'')+'" data-j="'+j+'">'+(x.type==='video'?'<video src="'+esc(x.url)+'" preload="metadata"></video>':'<img src="'+esc(x.url)+'">')+'</div>').join('')+'</div>':'')+'<div class="ch-meta"><span class="ch-time">sent '+dt(Date.parse(m.created_at))+(m.edited_at?' (edited)':'')+(mine&&m.read_at?' · seen':'')+'</span>'+(mine?'<b onclick="editChatMsg('+i+')">edit</b><b class="d" onclick="delChatMsg('+i+')">del</b>':'')+'</div>';d.querySelectorAll('.mm').forEach(el=>el.onclick=()=>openMedia(m.media,+el.dataset.j));f.append(d)});$('ch-list').replaceChildren(f);$('ch-list').scrollTop=$('ch-list').scrollHeight}
 $('ch-txt').addEventListener('input',()=>{let n=Date.now();if(curChat&&curChat.ch&&n-lastT>1500){lastT=n;try{W.typing(curChat.ch,acc.uid)}catch(e){}}});
+/* === EXAMPLES + COMPETITION === */
+function loadPins(){document.querySelectorAll('.pin').forEach(async p=>{if(p.dataset.ok)return;for(const x of ['jpg','jpeg','png','webp','mp4']){let u='examples/'+p.dataset.k+'.'+x;try{let r=await fetch(u,{method:'HEAD'});if(r.ok&&!(r.headers.get('content-type')||'').includes('html')){p.dataset.ok=1;p.innerHTML=x==='mp4'?`<video src="${u}" muted autoplay loop playsinline></video>`:`<img src="${u}" decoding="async">`;break}}catch(e){}}})}
+let RK={};
+function badge(p){if(p>92)return '';let t=p<=3?['#ffd54a','#a87400']:p<=30?['#e0b94a','#8a6d1d']:p<=61?['#c9ced6','#6b7280']:['#d9955a','#7a4a1a'];return `<svg viewBox="0 0 40 40" width="36" height="36">${p<=3?'<defs><radialGradient id="g'+p+'"><stop offset="0" stop-color="#fff6c2"/><stop offset="1" stop-color="'+t[0]+'"/></radialGradient></defs>':''}<circle cx="20" cy="20" r="17" fill="${p<=3?'url(#g'+p+')':t[0]}" stroke="${t[1]}" stroke-width="${p<=3?4:3}"/>${p<=3?'<path d="M9 17l5 4 6-9 6 9 5-4-2 12H11z" fill="#fff" stroke="'+t[1]+'" stroke-width="1.5"/>':'<path d="M20 9l3 7 7 .6-5.3 4.7 1.6 7.2L20 24.8l-6.3 3.7 1.6-7.2L10 16.6l7-.6z" fill="#fff"/>'}</svg>`}
+async function renderRank(){let box=$('se-default-area');try{let rows=await W.ranking();RK={};let h='<div class="se-title">COMPETITION</div>';rows.forEach(r=>{RK[r.user_id]=r;h+=`<div class="se-comp-box"><div class="se-comp-left"><span class="se-comp-num">${r.position}.</span><div class="se-comp-circle">${r.pic_url?`<img src="${esc(r.pic_url)}" style="width:100%;height:100%;object-fit:cover">`:''}</div><span style="font-size:.7rem;font-weight:700;color:#0000a0">${r.fulfilled} wishes</span></div><div class="se-comp-more" onclick="rankMore('${r.user_id}')">MORE</div><div class="se-comp-right" style="border:none">${badge(+r.position)}</div></div>`});if(!rows.length)h+='<div class="se-empty">No granters yet. Be the first.</div>';box.innerHTML=h}catch(e){console.error(e)}}
+function rankMore(id){let r=RK[id];if(!r)return;$('m-name').textContent=r.name;$('m-age').textContent=r.age;$('m-gen').textContent=r.gender;$('m-cty').textContent=r.country;$('ms').classList.add('sh')}
+async function showPos(){try{let g=await W.myGranter();if(!g)return toast('Create a granter account first to see your position');let r=await W.myRank(acc.uid);$('pos-overlay').querySelector('.pos-num').textContent=r?r.position:'-';$('pos-overlay').classList.add('sh')}catch(e){}}
 boot();
 </script>
 </body>
