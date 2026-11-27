@@ -85,6 +85,17 @@ const W = {
   async ranking() { return ok(await sb.from("ranking").select("*").order("position").limit(100)); },
   async myRank(uid) { return ok(await sb.from("ranking").select("position,fulfilled").eq("user_id", uid).maybeSingle()); },
 
+  async saveGranter(g, picFile) {
+    const u = await W.user(); let pic_url = g.pic_url;
+    if (picFile) pic_url = (await W.upload(picFile, u.id)).url;
+    const row = { name: g.name, country: g.country, age: +g.age, gender: g.gender, business: g.business, pic_url };
+    if (await W.myGranter()) ok(await sb.from("granters").update(row).eq("user_id", u.id));
+    else ok(await sb.from("granters").insert({ user_id: u.id, ...row }));
+    return W.myGranter();
+  },
+  async deleteGranter() { const u = await W.user(); ok(await sb.from("granters").delete().eq("user_id", u.id)); },
+  async ownedBgs() { return ok(await sb.from("owned_backgrounds").select("background")).map(x => x.background); },
+
   /* ---------- LIKES / SAVES / COMMENTS ---------- */
   async likesFor(ids) { return ok(await sb.from("likes").select("wish_id,user_id").in("wish_id", ids)); },
   async toggleLike(wishId, liked) {
