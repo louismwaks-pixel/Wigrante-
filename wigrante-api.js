@@ -81,6 +81,10 @@ const W = {
   async profileInfo(id) { return ok(await sb.from("profiles").select("*").eq("id", id).maybeSingle()); },
   async report(wishId) { const u = await W.user(); ok(await sb.from("reports").insert({ wish_id: wishId, reporter_id: u.id })); },
 
+  async wishGranter(id) { return ok(await sb.from("wishes").select("granter_id").eq("id", id).single()).granter_id; },
+  async ranking() { return ok(await sb.from("ranking").select("*").order("position").limit(100)); },
+  async myRank(uid) { return ok(await sb.from("ranking").select("position,fulfilled").eq("user_id", uid).maybeSingle()); },
+
   /* ---------- LIKES / SAVES / COMMENTS ---------- */
   async likesFor(ids) { return ok(await sb.from("likes").select("wish_id,user_id").in("wish_id", ids)); },
   async toggleLike(wishId, liked) {
